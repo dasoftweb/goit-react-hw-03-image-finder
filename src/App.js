@@ -1,9 +1,11 @@
 import { Component } from 'react';
+import Loader from 'react-loader-spinner';
 // Components
 import Searchbar from './components/Searchbar/Searchbar';
 import ImageGallery from './components/ImageGallery/ImageGallery';
 import imagesApi from './services/images-api';
 import Button from './components/Button/Button';
+import Modal from './components/Modal/Modal';
 
 class App extends Component {
   state = {
@@ -12,6 +14,10 @@ class App extends Component {
     searchQuery: '',
     pageSize: 12,
     isLoading: false,
+    error: null,
+    showModal: false,
+    largeImageURL: '',
+    alt: '',
   };
 
   componentDidUpdate(prevProps, PrevState) {
@@ -21,7 +27,25 @@ class App extends Component {
   }
 
   onChangeQuery = query => {
-    this.setState({ searchQuery: query, currentPage: 1, images: [] });
+    this.setState({
+      searchQuery: query,
+      currentPage: 1,
+      images: [],
+      error: null,
+    });
+  };
+
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({ showModal: !showModal }));
+
+    if (this.state.showModal) {
+      this.setState({ largeImgUrl: '', alt: '' });
+    }
+  };
+
+  handleModal = (largeImgUrl, alt) => {
+    this.setState({ largeImgUrl: largeImgUrl, alt: alt });
+    this.toggleModal();
   };
 
   fetchImages = () => {
@@ -39,18 +63,50 @@ class App extends Component {
           currentPage: prevState.currentPage + 1,
         }));
       })
-      .catch(error => console.log(error))
-      .finally(() => this.setState({ isLoading: false }));
+      .catch(error => this.setState({ error: error }))
+      .finally(() =>
+        this.setState(
+          { isLoading: false },
+          window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth',
+          }),
+        ),
+      );
   };
 
   render() {
-    const { images, isLoading } = this.state;
+    const {
+      images,
+      isLoading,
+      error,
+      showModal,
+      largeImgUrl,
+      alt,
+    } = this.state;
     return (
       <>
         <Searchbar onSubmit={this.onChangeQuery} />
-        <ImageGallery images={images} />
-        {isLoading && <h1>Загрузка</h1>}
-        {images.length > 0 && <Button onClick={this.fetchImages} />}
+        {error && <h3 className="Error">Search error:( Please try again!</h3>}
+        <ImageGallery images={images} onImageClick={this.handleModal} />
+        {isLoading && (
+          <Loader
+            className="Loader"
+            type="Oval"
+            color="#3f51b5"
+            height={50}
+            width={50}
+            timeout={1000}
+          />
+        )}
+        {(images.length && !isLoading) > 0 && (
+          <Button onClick={this.fetchImages} />
+        )}
+        {showModal && (
+          <Modal onClose={this.toggleModal}>
+            <img src={largeImgUrl} alt={alt} />
+          </Modal>
+        )}
       </>
     );
   }

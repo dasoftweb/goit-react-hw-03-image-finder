@@ -1,7 +1,7 @@
 // import PropTypes from 'prop-types';
 import ImageGalleryItem from '../../components/ImageGalleryItem/ImageGalleryItem';
 
-const ImageGallery = ({ images }) => (
+const ImageGallery = ({ images, onImageClick }) => (
   <ul className="ImageGallery">
     {images.map(({ id, tags, webformatURL, largeImageURL }) => (
       <ImageGalleryItem
@@ -9,6 +9,7 @@ const ImageGallery = ({ images }) => (
         alt={tags}
         previewURL={webformatURL}
         largeImageURL={largeImageURL}
+        onImageClick={onImageClick}
       />
     ))}
   </ul>
